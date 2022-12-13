@@ -1,0 +1,42 @@
+<resources>
+
+    <style name="Widget.Theme.AppCompat.NoActionBar.MyView" parent="">
+        <item name="android:background">@color/gray_400</item>
+    </style>
+
+    <!-- Card Style -->
+    <style name="card_style">
+        <item name="android:layout_margin">8dp</item>
+        <item name="android:layout_height">35dp</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:background">@drawable/item_background_border</item>
+    </style>
+
+    <!-- Card Style -->
+    <style name="body_style">
+        <item name="android:textColor">@color/text_color</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <!-- Title Style -->
+    <style name="title_style">
+        <item name="android:textAlignment">center</item>
+        <item name="android:textColor">@color/title_color</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Component Icon Style -->
+    <style name="component_icon_style">
+        <item name="android:tint">@color/icon_color</item>
+    </style>
+
+    <!-- Component Text Style -->
+    <style name="component_text_style">
+        <item name="android:textAlignment">center</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+
+</resources>

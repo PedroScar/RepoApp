@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- IconText Attributes -->
+    <declare-styleable name="IconText">
+        <attr name="iconType" format="enum">
+            <enum name="star" value="0"/>
+            <enum name="fork" value="1"/>
+        </attr>
+    </declare-styleable>
+
+</resources>
