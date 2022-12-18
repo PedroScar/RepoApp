@@ -1,21 +1,20 @@
 package com.example.repoapp.ui.repolist
 
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.repoapp.model.data.vo.GitRepositoriesVO
 import com.example.repoapp.model.repository.GithubRepository
+import com.example.repoapp.ui.BaseViewModel
+import com.example.repoapp.ui.RepositoriesUiState
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class RepositoriesListViewModel @Inject constructor(
     private val repository: GithubRepository
-) : ViewModel() {
+) : BaseViewModel<RepositoriesUiState>() {
 
-    val newPage = MutableLiveData<List<GitRepositoriesVO>>()
-    val loader = MutableLiveData<Boolean>()
-    val errorDialog = MutableLiveData<Boolean>()
     val allRepositoriesList = ArrayList<GitRepositoriesVO>()
     var actualPageNumber = 1
 
@@ -23,23 +22,25 @@ class RepositoriesListViewModel @Inject constructor(
         this.fetchRepoPage()
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun fetchRepoPage() {
+        repositoriesUiState.value = RepositoriesUiState.Loading
+
         viewModelScope.launch(Dispatchers.IO) {
-            loader.postValue(true)
             repository.fetchRepositoriesList(page = actualPageNumber).collect { result ->
                 when {
-                    result.isFailure -> errorDialog.postValue(true)
+                    result.isFailure -> repositoriesUiState.value = RepositoriesUiState.Error(message = result.exceptionOrNull()!!.message!!)
                     result.isSuccess -> {
-                        if (loader.value == true)
+                        if (repositoriesUiState.value == RepositoriesUiState.Loading)
                             with(result.getOrNull()!!) {
                                 allRepositoriesList.addAll(this)
-                                newPage.postValue(this)
                                 actualPageNumber += 1
+                                GlobalScope.launch(Dispatchers.Main) {
+                                    repositoriesUiState.value = RepositoriesUiState.Success(result.getOrNull()!!)
+                                }
                             }
                     }
                 }
-
-                loader.postValue(false)
             }
         }
     }

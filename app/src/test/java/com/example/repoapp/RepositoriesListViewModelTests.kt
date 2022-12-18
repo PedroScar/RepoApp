@@ -2,10 +2,10 @@ package com.example.repoapp
 
 import com.example.repoapp.model.data.vo.GitRepositoriesVO
 import com.example.repoapp.model.repository.GithubRepository
+import com.example.repoapp.ui.RepositoriesUiState
 import com.example.repoapp.ui.repolist.RepositoriesListViewModel
 import com.example.utils.BaseUnitTest
 import com.example.utils.captureValues
-import com.example.utils.getOrAwaitValue
 import com.example.utils.getValueForTest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
@@ -48,14 +48,17 @@ class RepositoriesListViewModelTests : BaseUnitTest() {
 
         await().atMost(5, TimeUnit.SECONDS).until { viewModel.actualPageNumber == 2 }
 
-        Assert.assertEquals(repositories, viewModel.newPage.getValueForTest())
+        Assert.assertEquals(RepositoriesUiState.Success(repositories), viewModel.uiState().getValueForTest())
     }
 
     @Test
     fun emitErrorWhenServiceFails() {
         val viewModel = mockErrorCase()
 
-        Assert.assertEquals(true, viewModel.errorDialog.getOrAwaitValue())
+
+        await().atMost(5, TimeUnit.SECONDS).until { viewModel.uiState().value == RepositoriesUiState.Error("Something went wrong") }
+
+      Assert.assertEquals(RepositoriesUiState.Error(exception.message!!), viewModel.uiState().getValueForTest())
     }
 
     @Test
@@ -82,13 +85,13 @@ class RepositoriesListViewModelTests : BaseUnitTest() {
     fun startStopLoaderCycle() {
         val viewModel = mockSuccessfulCase()
 
-        viewModel.loader.captureValues {
-            viewModel.newPage.getValueForTest()
+        viewModel.uiState().captureValues {
+            viewModel.fetchRepoPage()
 
-            await().atMost(5, TimeUnit.SECONDS).until { values.last() == false }
+            await().atMost(5, TimeUnit.SECONDS).until { values.last() == RepositoriesUiState.Success(repositories) }
 
-            Assert.assertEquals(true, values[0])
-            Assert.assertEquals(false, values.last())
+            Assert.assertEquals(RepositoriesUiState.Loading, values[0])
+            Assert.assertEquals(RepositoriesUiState.Success(repositories), values.last())
         }
     }
 

@@ -12,7 +12,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.repoapp.databinding.FragmentListBinding
 import com.example.repoapp.model.data.vo.GitRepositoriesVO
 import com.example.repoapp.ui.GithubRepoViewModelFactory
+import com.example.repoapp.ui.RepositoriesUiState
 import com.example.repoapp.ui.adapters.RepositoriesListAdapter
+import com.example.repoapp.ui.changeVisibleGone
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import com.example.repoapp.ui.components.ErrorDialog
@@ -42,56 +44,44 @@ class RepositoriesListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         this.setupViewModel()
-        this.setupListAdapter()
-        this.setupListObserver()
-        this.setupLoaderObserver()
-        this.setupErrorDialogObserver()
+        this.setupListAdapter(ArrayList())
+        this.setupUiStateObserver()
         this.setupListListener()
+    }
+
+    private fun setupUiStateObserver() {
+        viewModel.uiState().observe(this as LifecycleOwner) { uiState ->
+            if (uiState != null) {
+                render(uiState)
+            }
+        }
+    }
+
+    private fun render(repositoriesUiState: RepositoriesUiState) {
+        when (repositoriesUiState) {
+            is RepositoriesUiState.Loading -> {
+                showLoader(true)
+            }
+            is RepositoriesUiState.Success -> {
+                showLoader(false)
+                recyclerViewAdapter.addNewPage(repositoriesUiState.response)
+            }
+            is RepositoriesUiState.Error -> {
+                showLoader(false)
+                ErrorDialog(requireContext()) { viewModel.fetchRepoPage() }.showDialog()
+            }
+        }
+    }
+
+    private fun showLoader(show: Boolean) {
+        binding.lLoader.changeVisibleGone(show)
     }
 
     private fun setupViewModel() {
         viewModel = ViewModelProvider(this, viewModelFactory)[RepositoriesListViewModel::class.java]
     }
 
-    private fun setupListAdapter() {
-        recyclerViewAdapter = RepositoriesListAdapter(ArrayList(), requireContext())
-        binding.rvRepository.adapter = recyclerViewAdapter
-    }
-
-    private fun setupListObserver() {
-        viewModel.newPage.observe(this as LifecycleOwner) { newPage ->
-            if (viewModel.loader.value == true && newPage.isNotEmpty())
-                this.addNewPage(newPage)
-             else
-                this.populateRepositoryList(viewModel.allRepositoriesList)
-
-        }
-    }
-
-    private fun setupLoaderObserver() {
-        viewModel.loader.observe(this as LifecycleOwner) { showLoader ->
-            binding.lLoader.visibility = when (showLoader) {
-                true -> View.VISIBLE
-                else -> View.GONE
-            }
-        }
-    }
-
-    private fun setupErrorDialogObserver() {
-        viewModel.errorDialog.observe(this as LifecycleOwner) { showErrorDialog ->
-            if (showErrorDialog) {
-                ErrorDialog(requireContext()) {
-                    viewModel.fetchRepoPage()
-                }.showDialog()
-            }
-        }
-    }
-
-    private fun addNewPage(newPage: List<GitRepositoriesVO>) {
-        recyclerViewAdapter.addNewPage(newPage)
-    }
-
-    private fun populateRepositoryList(list: List<GitRepositoriesVO>) {
+    private fun setupListAdapter(list: List<GitRepositoriesVO>) {
         recyclerViewAdapter = RepositoriesListAdapter(list as ArrayList<GitRepositoriesVO>, requireContext())
         binding.rvRepository.adapter = recyclerViewAdapter
     }
@@ -110,14 +100,18 @@ class RepositoriesListFragment : Fragment() {
                     totalItemCount = layoutManager.itemCount
                     pastVisiblesItems = layoutManager.findFirstVisibleItemPosition()
 
-                    if (viewModel.loader.value == false)
-                        if (visibleItemCount + pastVisiblesItems >= totalItemCount) {
-                            viewModel.loader.postValue(true)
+                    if (viewModel.uiState().value != RepositoriesUiState.Loading)
+                        if (visibleItemCount + pastVisiblesItems + 8 >= totalItemCount) {
                             viewModel.fetchRepoPage()
                         }
                 }
             }
         })
+    }
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+        this.setupListAdapter(viewModel.allRepositoriesList)
     }
 
     companion object {
