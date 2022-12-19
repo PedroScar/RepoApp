@@ -1,4 +1,4 @@
-package com.example.repoapp.ui
+package com.example.repoapp.ui.repolist
 
 import com.example.repoapp.model.data.vo.GitRepositoriesVO
 

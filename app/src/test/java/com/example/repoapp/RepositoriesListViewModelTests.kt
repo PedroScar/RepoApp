@@ -2,7 +2,7 @@ package com.example.repoapp
 
 import com.example.repoapp.model.data.vo.GitRepositoriesVO
 import com.example.repoapp.model.repository.GithubRepository
-import com.example.repoapp.ui.RepositoriesUiState
+import com.example.repoapp.ui.repolist.RepositoriesUiState
 import com.example.repoapp.ui.repolist.RepositoriesListViewModel
 import com.example.utils.BaseUnitTest
 import com.example.utils.captureValues
@@ -36,14 +36,14 @@ class RepositoriesListViewModelTests : BaseUnitTest() {
     private var exception = RuntimeException("Something went wrong")
 
     @Test
-    fun getNewPageFromRepository(): Unit = runBlocking  {
+    fun getNewPageFromRepository(): Unit = runBlocking {
         mockSuccessfulCase()
 
         verify(repository, times(1)).fetchRepositoriesList(1)
     }
 
     @Test
-    fun emitsNewPageFromRepository()  {
+    fun emitsNewPageFromRepository() {
         val viewModel = mockSuccessfulCase()
 
         await().atMost(5, TimeUnit.SECONDS).until { viewModel.actualPageNumber == 2 }
@@ -55,10 +55,9 @@ class RepositoriesListViewModelTests : BaseUnitTest() {
     fun emitErrorWhenServiceFails() {
         val viewModel = mockErrorCase()
 
-
         await().atMost(5, TimeUnit.SECONDS).until { viewModel.uiState().value == RepositoriesUiState.Error("Something went wrong") }
 
-      Assert.assertEquals(RepositoriesUiState.Error(exception.message!!), viewModel.uiState().getValueForTest())
+        Assert.assertEquals(RepositoriesUiState.Error(exception.message!!), viewModel.uiState().getValueForTest())
     }
 
     @Test
@@ -71,7 +70,7 @@ class RepositoriesListViewModelTests : BaseUnitTest() {
     }
 
     @Test
-    fun addAllNewPageItensIntoAllRepoList()  {
+    fun addAllNewPageItensIntoAllRepoList() {
         val viewModel = mockSuccessfulCase()
 
         val initialAllRepoValue = 0

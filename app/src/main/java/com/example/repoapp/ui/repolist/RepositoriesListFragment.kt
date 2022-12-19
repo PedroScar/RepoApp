@@ -12,12 +12,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.repoapp.databinding.FragmentListBinding
 import com.example.repoapp.model.data.vo.GitRepositoriesVO
 import com.example.repoapp.ui.GithubRepoViewModelFactory
-import com.example.repoapp.ui.RepositoriesUiState
 import com.example.repoapp.ui.adapters.RepositoriesListAdapter
 import com.example.repoapp.ui.changeVisibleGone
+import com.example.repoapp.ui.components.ErrorDialog
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import com.example.repoapp.ui.components.ErrorDialog
 
 @AndroidEntryPoint
 class RepositoriesListFragment : Fragment() {

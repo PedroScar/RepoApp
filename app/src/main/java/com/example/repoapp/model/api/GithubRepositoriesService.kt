@@ -13,8 +13,8 @@ class GithubRepositoriesService @Inject constructor(
     suspend fun fetchRepositoriesList(page: Int): Flow<Result<GitRepoRaw>> {
         return flow {
             emit(Result.success(api.fetchRepositoriesList(page = page)))
-        }.catch {
-            emit(Result.failure(RuntimeException("Something went wrong")))
+        }.catch { exception ->
+            emit(Result.failure(RuntimeException(exception.message)))
         }
     }
 }

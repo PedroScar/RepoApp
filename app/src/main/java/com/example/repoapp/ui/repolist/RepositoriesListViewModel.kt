@@ -4,11 +4,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.repoapp.model.data.vo.GitRepositoriesVO
 import com.example.repoapp.model.repository.GithubRepository
 import com.example.repoapp.ui.BaseViewModel
-import com.example.repoapp.ui.RepositoriesUiState
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 class RepositoriesListViewModel @Inject constructor(
@@ -22,26 +19,29 @@ class RepositoriesListViewModel @Inject constructor(
         this.fetchRepoPage()
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun fetchRepoPage() {
-        repositoriesUiState.value = RepositoriesUiState.Loading
-
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.fetchRepositoriesList(page = actualPageNumber).collect { result ->
-                when {
-                    result.isFailure -> repositoriesUiState.value = RepositoriesUiState.Error(message = result.exceptionOrNull()!!.message!!)
-                    result.isSuccess -> {
-                        if (repositoriesUiState.value == RepositoriesUiState.Loading)
+        viewModelScope.launch(ioDispatcher) {
+            repository.fetchRepositoriesList(page = actualPageNumber)
+                .onStart { setState(RepositoriesUiState.Loading) }
+                .collect { result ->
+                    when {
+                        result.isFailure -> setState(RepositoriesUiState.Error(message = result.exceptionOrNull()!!.message!!))
+                        result.isSuccess -> {
                             with(result.getOrNull()!!) {
                                 allRepositoriesList.addAll(this)
                                 actualPageNumber += 1
-                                GlobalScope.launch(Dispatchers.Main) {
-                                    repositoriesUiState.value = RepositoriesUiState.Success(result.getOrNull()!!)
-                                }
+                                setState(RepositoriesUiState.Success(this))
                             }
+                        }
                     }
                 }
-            }
+        }
+    }
+
+    private fun setState(state: RepositoriesUiState) {
+        viewModelScope.launch(uiDispatcher) {
+            repositoriesUiState.value = state
         }
     }
 }
+
